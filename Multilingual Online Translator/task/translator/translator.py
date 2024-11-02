@@ -31,28 +31,32 @@ class Translator:
         file.close()
 
     def get_examples(self, translation: Translation, lang: Language) -> str:
-        if not translation.isEmpty():
-            result = f"{lang.capitalized()} Examples:"
-            for idx, example in enumerate(translation.examples):
-                if idx < self.no_prints:
-                    result += f"\n{example[0]}\n{example[1]}\n"
-            result += "\n\n"
-        else:
-            result = ""
+        result = f"{lang.capitalized()} Examples:"
+        for idx, example in enumerate(translation.examples):
+            if idx < self.no_prints:
+                result += f"\n{example[0]}\n{example[1]}\n"
+        result += "\n\n"
         return result
 
     def get_translations(self, translation: Translation, lang: Language) -> str:
-        if not translation.isEmpty():
-            result = f"{lang.capitalized()} Translations:"
-            for idx, translation in enumerate(translation.translations):
-                if idx < self.no_prints:
-                    result += f"\n{translation}"
-            result += "\n\n"
-        else:
-            result = f"No translations found for target language {lang.capitalized()}\n"
+        result = f"{lang.capitalized()} Translations:"
+        for idx, translation in enumerate(translation.translations):
+            if idx < self.no_prints:
+                result += f"\n{translation}"
+        result += "\n\n"
         return result
 
-parser = argparse.ArgumentParser()
+class CustomParser(argparse.ArgumentParser):
+    def _check_value(self, action, value):
+        # converted value must be one of the choices (if specified)
+        if action.choices is not None and value not in action.choices:
+            msg = f"Sorry, the program doesn't support {value}"
+            raise argparse.ArgumentError(None, msg)
+    def error(self, message):
+        print(message)
+        self.exit(1)
+
+parser = CustomParser()
 parser.add_argument("from_lang", choices=Language.names(), help="Source language")
 parser.add_argument("to_lang", choices=["all", *Language.names()], help="Target language")
 parser.add_argument("query", help="The word you want to translate")

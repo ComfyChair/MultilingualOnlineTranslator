@@ -1,7 +1,7 @@
 # requester module
 
 import re
-from typing import Optional, List
+from typing import List
 
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
@@ -13,8 +13,6 @@ from translation import Translation
 class Requester:
     headers = {'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 Chrome/93.0.4577.82 Safari/537.36'}
     base_url = 'https://context.reverso.net/translation'
-    OK = "OK"
-    FAILED = "FAILED"
     translations_filter = SoupStrainer(id="translations-content")
     example_filter = SoupStrainer(id="examples-content")
 
@@ -26,11 +24,16 @@ class Requester:
         urls = [self.base_url + lang + f'/{word}' for lang in self.lang_str]
         responses = []
         for url in urls:
-            response = requests.get(url, headers=self.headers)
-            if response.ok:
-                responses.append(self.extract_translation(response.text))
-            else:
-                responses.append(Translation.empty())
+            try:
+                response = requests.get(url, headers=self.headers)
+                if response.ok:
+                    responses.append(self.extract_translation(response.text))
+                elif response.status_code == 404:
+                    print(f"Sorry, unable to find {word}")
+                    break
+            except requests.exceptions.RequestException:
+                print(f"Something wrong with your internet connection")
+                break
         return responses
 
     def extract_translation(self, text: str) -> Translation:
