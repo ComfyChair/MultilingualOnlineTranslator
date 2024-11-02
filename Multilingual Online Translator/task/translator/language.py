@@ -1,9 +1,11 @@
 # language module
 
 from enum import Enum
+from typing import List, Type
 
 
 class Language(Enum):
+    all = 0
     arabic = 1
     german = 2
     english = 3
@@ -18,9 +20,15 @@ class Language(Enum):
     russian = 12
     turkish = 13
 
-    @classmethod
-    def enumerate(cls):
-        return "\n".join([f"{lang.value}. {lang.capitalized()}" for lang in cls])
-
-    def capitalized(self):
+    def capitalized(self) -> str:
         return self.name.capitalize()
+
+    @classmethod
+    def enumerate(cls) -> str:
+        return "\n".join([f"{lang.value}. {lang.capitalized()}"
+                          for idx, lang in enumerate(cls) if idx > 0])
+
+    @classmethod
+    def get_all(cls):
+        return [lang for idx, lang in enumerate(cls) if idx > 0]
+

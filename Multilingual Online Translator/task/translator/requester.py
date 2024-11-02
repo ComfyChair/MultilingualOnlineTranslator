@@ -1,7 +1,7 @@
 # requester module
 
 import re
-from typing import Optional
+from typing import Optional, List
 
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
@@ -18,16 +18,21 @@ class Requester:
     translations_filter = SoupStrainer(id="translations-content")
     example_filter = SoupStrainer(id="examples-content")
 
-    def __init__(self, from_lang: Language, to_lang: Language):
+    def __init__(self, from_lang: Language, to_lang: List[Language]):
         self.from_lang = from_lang
-        self.lang_str = f"/{from_lang.name}-{to_lang.name}"
+        self.lang_str = [f"/{from_lang.name}-{lang.name}" for lang in to_lang]
 
-    def get_translations(self, word) -> Optional[Translation]:
-        url = self.base_url + self.lang_str + f'/{word}'
-        response = requests.get(url, headers=self.headers)
-        print(f"{response.status_code} {self.OK if response.ok else self.FAILED}")
-        if response.ok:
-            return self.extract_translation(response.text)
+    def get_translations(self, word) -> List[Translation]:
+        urls = [self.base_url + lang + f'/{word}' for lang in self.lang_str]
+        responses = []
+        for url in urls:
+            response = requests.get(url, headers=self.headers)
+            print(f"{response.status_code} {self.OK if response.ok else self.FAILED}")
+            if response.ok:
+                responses.append(self.extract_translation(response.text))
+            else:
+                responses.append(Translation.empty())
+        return responses
 
     def extract_translation(self, text: str) -> Translation:
         terms = self.extract_terms(text)

@@ -12,3 +12,10 @@ class Translation:
     def __init__(self, terms: List[str], examples_from: List[str], examples_to: List[str]):
         self.translations = terms
         self.examples = list(zip(examples_from, examples_to))
+
+    def isEmpty(self):
+        return len(self.translations) == 0
+
+    @staticmethod
+    def empty():
+        return Translation([], [], [])
