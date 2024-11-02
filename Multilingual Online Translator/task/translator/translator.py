@@ -20,38 +20,72 @@ class Translator:
 
     def translate(self, query: str):
         translations = self.requester.get_translations(query)
-        for idx, translation in enumerate(translations):
-            self.print_translations(translation, self.trg_lang[idx])
-            self.print_examples(translation, self.trg_lang[idx])
+        with open(f"{query}.txt", 'w') as file:
+            for idx, translation in enumerate(translations):
+                trans = self.get_translations(translation, self.trg_lang[idx])
+                file.write(trans)
+                ex = self.get_examples(translation, self.trg_lang[idx])
+                file.write(ex)
+                print(trans + ex, end="")
+        file.close()
 
-    def print_examples(self, translation: Translation, lang: Language):
+    def get_examples(self, translation: Translation, lang: Language) -> str:
         if not translation.isEmpty():
-            print(f"\n{lang.capitalized()} Examples:")
+            result = f"{lang.capitalized()} Examples:"
             for idx, example in enumerate(translation.examples):
                 if idx < self.no_prints:
-                    print(example[0])
-                    print(example[1])
-                    print()
+                    result += f"\n{example[0]}\n{example[1]}\n"
+            result += "\n\n"
+        else:
+            result = ""
+        return result
 
-    def print_translations(self, translation: Translation, lang: Language):
+    def get_translations(self, translation: Translation, lang: Language) -> str:
         if not translation.isEmpty():
-            print(f"\n{lang.capitalized()} Translations:")
+            result = f"{lang.capitalized()} Translations:"
             for idx, translation in enumerate(translation.translations):
                 if idx < self.no_prints:
-                    print(translation)
+                    result += f"\n{translation}"
+            result += "\n\n"
         else:
-            print(f"\n No translations found for target language {lang.capitalized()}")
+            result = f"No translations found for target language {lang.capitalized()}\n"
+        return result
 
 WELCOME_MSG = f"Hello, welcome to the translator. Translator supports:\n{Language.enumerate()}"
 FROM_LANG_MSG = 'Type the number of your language:\n'
 TO_LANG_MSG = "Type the number of a language you want to translate to or '0' to translate to all languages:\n"
 
+
+def get_src_lang() -> Language:
+    while True:
+        from_choice = input(FROM_LANG_MSG)
+        try:
+            from_int = int(from_choice)
+            from_lang = Language(from_int)
+            if from_lang is Language.all:
+                raise ValueError
+            else:
+                return from_lang
+        except ValueError:
+            print(f"Invalid choice: {from_choice}")
+
+
+def get_trg_lang():
+    while True:
+        to_choice = input(TO_LANG_MSG)
+        try:
+            to_int = int(to_choice)
+            to_lang = Language(to_int)
+            return to_lang
+        except ValueError:
+            print(f"Invalid choice: {to_choice}")
+
 if __name__ == '__main__':
     print(WELCOME_MSG)
-    from_lang = Language(int(input(FROM_LANG_MSG)))
-    to_lang = Language(int(input(TO_LANG_MSG)))
-    translator = Translator(from_lang, to_lang)
+    src_lang = get_src_lang()
+    trg_lang = get_trg_lang()
+    translator = Translator(src_lang, trg_lang)
     word = input("Type the word you want to translate:\n")
-    print(f'You chose "{from_lang.capitalized()}" as a language to translate "{word}".')
+    print(f'You chose "{src_lang.capitalized()}" as a language to translate "{word}".')
     if translator:
         translator.translate(word)
