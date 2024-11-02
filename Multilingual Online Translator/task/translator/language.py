@@ -32,3 +32,6 @@ class Language(Enum):
     def get_all(cls):
         return [lang for idx, lang in enumerate(cls) if idx > 0]
 
+    @classmethod
+    def names(cls):
+        return [lang.name for idx, lang in enumerate(cls) if idx > 0]

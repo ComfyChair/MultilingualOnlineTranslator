@@ -27,7 +27,6 @@ class Requester:
         responses = []
         for url in urls:
             response = requests.get(url, headers=self.headers)
-            print(f"{response.status_code} {self.OK if response.ok else self.FAILED}")
             if response.ok:
                 responses.append(self.extract_translation(response.text))
             else:

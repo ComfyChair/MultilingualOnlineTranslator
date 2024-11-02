@@ -1,4 +1,5 @@
 # translator module
+import argparse
 
 from requester import Requester
 from translation import Translation
@@ -51,41 +52,14 @@ class Translator:
             result = f"No translations found for target language {lang.capitalized()}\n"
         return result
 
-WELCOME_MSG = f"Hello, welcome to the translator. Translator supports:\n{Language.enumerate()}"
-FROM_LANG_MSG = 'Type the number of your language:\n'
-TO_LANG_MSG = "Type the number of a language you want to translate to or '0' to translate to all languages:\n"
-
-
-def get_src_lang() -> Language:
-    while True:
-        from_choice = input(FROM_LANG_MSG)
-        try:
-            from_int = int(from_choice)
-            from_lang = Language(from_int)
-            if from_lang is Language.all:
-                raise ValueError
-            else:
-                return from_lang
-        except ValueError:
-            print(f"Invalid choice: {from_choice}")
-
-
-def get_trg_lang():
-    while True:
-        to_choice = input(TO_LANG_MSG)
-        try:
-            to_int = int(to_choice)
-            to_lang = Language(to_int)
-            return to_lang
-        except ValueError:
-            print(f"Invalid choice: {to_choice}")
+parser = argparse.ArgumentParser()
+parser.add_argument("from_lang", choices=Language.names(), help="Source language")
+parser.add_argument("to_lang", choices=["all", *Language.names()], help="Target language")
+parser.add_argument("query", help="The word you want to translate")
 
 if __name__ == '__main__':
-    print(WELCOME_MSG)
-    src_lang = get_src_lang()
-    trg_lang = get_trg_lang()
+    src_lang = Language[parser.parse_args().from_lang]
+    trg_lang = Language[parser.parse_args().to_lang]
     translator = Translator(src_lang, trg_lang)
-    word = input("Type the word you want to translate:\n")
-    print(f'You chose "{src_lang.capitalized()}" as a language to translate "{word}".')
-    if translator:
-        translator.translate(word)
+    word = parser.parse_args().query
+    translator.translate(word)
