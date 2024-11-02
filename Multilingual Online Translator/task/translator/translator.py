@@ -1,3 +1,6 @@
+# translator module
+from multiprocessing.connection import WELCOME
+
 from requester import Requester
 from translation import Translation
 from language import Language
@@ -30,18 +33,14 @@ class Translator:
             if idx < 5:
                 print(translation)
 
+WELCOME_MSG = f"Hello, welcome to the translator. Translator supports:\n{Language.enumerate()}"
 
 if __name__ == '__main__':
-    target_lang = input('Type "en" if you want to translate from French into English,'
-                   ' or "fr" if you want to translate from English into French:\n')
-    if target_lang == 'en':
-        translator = Translator(from_lang=Language("fr"), to_lang=Language("en"))
-    elif target_lang == 'fr':
-        translator = Translator(from_lang=Language("en"), to_lang=Language("fr"))
-    else:
-        translator = None
-        print(f"Sorry, {target_lang} is not (yet) supported.")
+    print(WELCOME_MSG)
+    from_lang = int(input('Type the number of your language:\n'))
+    to_lang = int(input('Type the number of language you want to translate to:\n'))
+    translator = Translator(Language(from_lang), Language(to_lang))
     word = input("Type the word you want to translate:\n")
-    print(f'You chose "{target_lang}" as a language to translate "{word}".')
+    print(f'You chose "{from_lang}" as a language to translate "{word}".')
     if translator:
         translator.translate(word)
