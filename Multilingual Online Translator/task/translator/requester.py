@@ -1,38 +1,39 @@
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
 
+from language import Language
+from translation import Translation
+
 
 class Requester:
     headers = {'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 Chrome/93.0.4577.82 Safari/537.36'}
     base_url = 'https://context.reverso.net/translation'
-    languages = {
-        "en": "english",
-        "fr": "french",
-        "es": "spanish",
-    }
     translations_filter = SoupStrainer(id="translations-content")
     example_from_filter = SoupStrainer(class_="src ltr")
     example_to_filter = SoupStrainer(class_="trg ltr")
 
-    def __init__(self, from_lang: str, to_lang: str):
-        self.lang_str = f"/{self.languages[from_lang]}-{self.languages[to_lang]}"
+    def __init__(self, from_lang: Language, to_lang: Language):
+        self.from_lang = from_lang
+        self.lang_str = f"/{from_lang.name}-{to_lang.name}"
 
-    def get_translations(self, word) -> tuple[list[str], list[str], list[str]]:
+    def get_translations(self, word) -> Translation:
         url = self.base_url + self.lang_str + f'/{word}'
         response = requests.get(url, headers=self.headers)
         while not response.ok:
             print(f"Trying to connect to {url}, status={response.status_code}...")
             response = requests.get(url, headers=self.headers)
         print(f"{response.status_code} OK")
-        return self.extract_terms(response.text)
+        return self.extract_translation(response.text)
 
-
-    @classmethod
-    def extract_terms(cls, text: str) -> tuple[list[str], list[str], list[str]]:
-        terms = cls.extract_translations(text)
-        examples_from = cls.extract_src_examples(text)
-        examples_to = cls.extract_trg_examples(text)
-        return terms, examples_from, examples_to
+    def extract_translation(self, text: str) -> Translation:
+        terms = self.extract_translations(text)
+        examples_from = self.extract_src_examples(text)
+        examples_to = self.extract_trg_examples(text)
+        if self.from_lang == Language.english:
+            translation = Translation(terms, examples_from, examples_to)
+        else:
+            translation = Translation(terms, examples_to, examples_from)
+        return translation
 
     @classmethod
     def extract_src_examples(cls, text):
