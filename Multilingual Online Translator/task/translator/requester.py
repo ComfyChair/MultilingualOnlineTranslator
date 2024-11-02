@@ -1,10 +1,10 @@
 # requester module
 
 import re
-from pprint import pprint
+from typing import Optional
 
 import requests
-from bs4 import BeautifulSoup, SoupStrainer, ResultSet
+from bs4 import BeautifulSoup, SoupStrainer
 
 from language import Language
 from translation import Translation
@@ -13,6 +13,8 @@ from translation import Translation
 class Requester:
     headers = {'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 Chrome/93.0.4577.82 Safari/537.36'}
     base_url = 'https://context.reverso.net/translation'
+    OK = "OK"
+    FAILED = "FAILED"
     translations_filter = SoupStrainer(id="translations-content")
     example_filter = SoupStrainer(id="examples-content")
 
@@ -20,17 +22,15 @@ class Requester:
         self.from_lang = from_lang
         self.lang_str = f"/{from_lang.name}-{to_lang.name}"
 
-    def get_translations(self, word) -> Translation:
+    def get_translations(self, word) -> Optional[Translation]:
         url = self.base_url + self.lang_str + f'/{word}'
         response = requests.get(url, headers=self.headers)
-        while not response.ok:
-            print(f"Trying to connect to {url}, status={response.status_code}...")
-            response = requests.get(url, headers=self.headers)
-        print(f"{response.status_code} OK")
-        return self.extract_translation(response.text)
+        print(f"{response.status_code} {self.OK if response.ok else self.FAILED}")
+        if response.ok:
+            return self.extract_translation(response.text)
 
     def extract_translation(self, text: str) -> Translation:
-        terms = self.extract_translations(text)
+        terms = self.extract_terms(text)
         examples_from , examples_to = self.extract_examples(text)
         return Translation(terms, examples_from, examples_to)
 
@@ -44,7 +44,7 @@ class Requester:
         return src_texts, to_texts
 
     @classmethod
-    def extract_translations(cls, text):
-        translation_soup = BeautifulSoup(text, 'html.parser', parse_only=cls.translations_filter)
-        term_elements = translation_soup.find_all("span", class_='display-term')
+    def extract_terms(cls, text):
+        term_soup = BeautifulSoup(text, 'html.parser', parse_only=cls.translations_filter)
+        term_elements = term_soup.find_all("span", class_='display-term')
         return [term.text for term in term_elements]

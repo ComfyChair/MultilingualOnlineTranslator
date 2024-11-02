@@ -1,9 +1,9 @@
 # translator module
-from multiprocessing.connection import WELCOME
 
 from requester import Requester
 from translation import Translation
 from language import Language
+
 
 class Translator:
 
@@ -12,10 +12,13 @@ class Translator:
         self.to_lang = to_lang
         self.requester = Requester(from_lang, to_lang)
 
-    def translate(self, word: str):
-        translation = self.requester.get_translations(word)
-        self.print_translations(translation)
-        self.print_examples(translation)
+    def translate(self, query: str):
+        translation = self.requester.get_translations(query)
+        if translation:
+            self.print_translations(translation)
+            self.print_examples(translation)
+        else:
+            print(f'Translation not found: {query}')
 
 
     def print_examples(self, translation: Translation):
@@ -37,10 +40,10 @@ WELCOME_MSG = f"Hello, welcome to the translator. Translator supports:\n{Languag
 
 if __name__ == '__main__':
     print(WELCOME_MSG)
-    from_lang = int(input('Type the number of your language:\n'))
-    to_lang = int(input('Type the number of language you want to translate to:\n'))
-    translator = Translator(Language(from_lang), Language(to_lang))
+    from_lang = Language(int(input('Type the number of your language:\n')))
+    to_lang = Language(int(input('Type the number of language you want to translate to:\n')))
+    translator = Translator(from_lang, to_lang)
     word = input("Type the word you want to translate:\n")
-    print(f'You chose "{from_lang}" as a language to translate "{word}".')
+    print(f'You chose "{from_lang.capitalized()}" as a language to translate "{word}".')
     if translator:
         translator.translate(word)
